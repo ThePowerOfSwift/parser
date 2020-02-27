@@ -110,6 +110,7 @@ class PDFParser
         }
         var maxBBoxHt: Float = 0.0
         var bboxValues = ""
+        var id = 0 // the vpArray that has the image with the largest height, ie the map
         for index in 0 ..< CGPDFArrayGetCount(vpArray)
         {
             var eachDictRef: CGPDFDictionaryRef? = nil
@@ -118,34 +119,39 @@ class PDFParser
                 let eachDict = eachDictRef
             {
             
+                // Get BBox Array
                 var bboxArrayRef: CGPDFArrayRef? = nil
-                guard CGPDFDictionaryGetArray(eachDict, "BBox", &bboxArrayRef), let bboxArr = bboxArrayRef else{
-                    continue
+                if CGPDFDictionaryGetArray(eachDict, "BBox", &bboxArrayRef), let bboxArr = bboxArrayRef {
+                    // Get values from BBox Array x1 y1 x2 y2
+                    var bboxValue:[CGFloat] = []
+                    for i in 0 ..< CGPDFArrayGetCount(bboxArr)
+                    {
+                        //var bboxReal: CGPDFReal
+                        var bboxValueRef: CGPDFReal = 0.0
+                        CGPDFArrayGetNumber(bboxArr, i, &bboxValueRef)
+                        //let num: CGFloat = bboxValueRef
+                        bboxValue.append(bboxValueRef)
+                    }
+                    var ht:Float
+                    if bboxValue[1] > bboxValue[3] { ht = Float (bboxValue[1] - bboxValue[3]) }
+                    else { ht = Float (bboxValue[3] - bboxValue[1]) }
+                    if (ht > maxBBoxHt) {
+                        maxBBoxHt = ht
+                        id = index
+                        bboxValues.append(bboxValue[0].description)
+                        bboxValues.append(" ")
+                        bboxValues.append(bboxValue[1].description)
+                        bboxValues.append(" ")
+                        bboxValues.append(bboxValue[2].description)
+                        bboxValues.append(" ")
+                        bboxValues.append(bboxValue[3].description)
+                    }
                 }
                 
-                // Get values from BBox Array x1 y1 x2 y2
-                var bboxValue:[CGFloat] = []
-                let sp:String = " "
-                for i in 0 ..< CGPDFArrayGetCount(bboxArr)
-                {
-                    //var bboxReal: CGPDFReal
-                    var bboxValueRef: CGPDFReal = 0.0
-                    CGPDFArrayGetNumber(bboxArr, i, &bboxValueRef)
-                    //let num: CGFloat = bboxValueRef
-                    bboxValue.append(bboxValueRef)
-                }
-                var ht:Float
-                if bboxValue[1] > bboxValue[3] { ht = Float (bboxValue[1] - bboxValue[3]) }
-                else { ht = Float (bboxValue[3] - bboxValue[1]) }
-                if (ht > maxBBoxHt) {
-                    maxBBoxHt = ht
-                    bboxValues.append(bboxValue[0].description)
-                    bboxValues.append(" ")
-                    bboxValues.append(bboxValue[1].description)
-                    bboxValues.append(" ")
-                    bboxValues.append(bboxValue[2].description)
-                    bboxValues.append(" ")
-                    bboxValues.append(bboxValue[3].description)
+                // Get the lat long from GPTS
+                var measureDictRef: CGPDFDictionaryRef? = nil
+                if CGPDFDictionaryGetDictionary(eachDict, "Measure", &measureDictRef), let measureDict = measureDictRef {
+                    
                 }
                 
             }
@@ -153,7 +159,10 @@ class PDFParser
                 print("error")
             }
             
+            
         }
+        
+        
         
         
         // Get PDF version
