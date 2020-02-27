@@ -8,6 +8,7 @@
 //  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 //  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+//https://stackoverflow.com/questions/2475450/extracting-images-from-a-pdf
 
 import Foundation
 import PDFKit
@@ -71,8 +72,89 @@ class PDFParser
             return [:]
         }
         
-        // test get media box
+        // get media box
         print(page.getBoxRect(CGPDFBox.mediaBox) )
+        
+        // get dictionary
+        guard let dictionary = page.dictionary else {
+            print ("error getting dictionary")
+            return[ "error": "error getting dictionary"]
+        }
+        var resourcesRef: CGPDFDictionaryRef?
+        guard CGPDFDictionaryGetDictionary(dictionary, "Resources", &resourcesRef),
+        let resources = resourcesRef else {
+            print ("could not read resources")
+            return ["error": "could not read resources"]
+        }
+        var xObj: CGPDFDictionaryRef?
+        guard CGPDFDictionaryGetDictionary(resources, "XObject", &xObj), let xObject = xObj else {
+            print("Couldn't load page XObject.")
+            return ["error": "Couldn't load page XObject."]
+        }
+        /*var stream: CGPDFStreamRef?
+        guard CGPDFDictionaryGetStream(xObject, "Im0", &stream), let imageStream = stream else {
+            print("No image on PDF page.")
+            return ["error": "No image on PDF page."]
+        }
+        var format: CGPDFDataFormat = .raw
+        guard let data = CGPDFStreamCopyData(imageStream, &format) else {
+            print("Couldn't convert image stream to data.")
+            return ["error": "Couldn't convert image stream to data."]
+        }
+        let image = UIImage(data: data as Data)*/
+        
+        // GET VP array of dictionaries
+        var vp: CGPDFArrayRef?
+        guard CGPDFDictionaryGetArray(dictionary,"VP",&vp), let vpArray = vp else {
+            return ["error":"No VP"]
+        }
+        var maxBBoxHt: Float = 0.0
+        var bboxValues = ""
+        for index in 0 ..< CGPDFArrayGetCount(vpArray)
+        {
+            var eachDictRef: CGPDFDictionaryRef? = nil
+            if
+                CGPDFArrayGetDictionary(vpArray, index, &eachDictRef),
+                let eachDict = eachDictRef
+            {
+            
+                var bboxArrayRef: CGPDFArrayRef? = nil
+                guard CGPDFDictionaryGetArray(eachDict, "BBox", &bboxArrayRef), let bboxArr = bboxArrayRef else{
+                    continue
+                }
+                
+                // Get values from BBox Array x1 y1 x2 y2
+                var bboxValue:[CGFloat] = []
+                let sp:String = " "
+                for i in 0 ..< CGPDFArrayGetCount(bboxArr)
+                {
+                    //var bboxReal: CGPDFReal
+                    var bboxValueRef: CGPDFReal = 0.0
+                    CGPDFArrayGetNumber(bboxArr, i, &bboxValueRef)
+                    //let num: CGFloat = bboxValueRef
+                    bboxValue.append(bboxValueRef)
+                }
+                var ht:Float
+                if bboxValue[1] > bboxValue[3] { ht = Float (bboxValue[1] - bboxValue[3]) }
+                else { ht = Float (bboxValue[3] - bboxValue[1]) }
+                if (ht > maxBBoxHt) {
+                    maxBBoxHt = ht
+                    bboxValues.append(bboxValue[0].description)
+                    bboxValues.append(" ")
+                    bboxValues.append(bboxValue[1].description)
+                    bboxValues.append(" ")
+                    bboxValues.append(bboxValue[2].description)
+                    bboxValues.append(" ")
+                    bboxValues.append(bboxValue[3].description)
+                }
+                
+            }
+            else {
+                print("error")
+            }
+            
+        }
+        
         
         // Get PDF version
         var major: Int32 = 0
