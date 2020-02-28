@@ -19,10 +19,10 @@ class PDFParser
 
 
     /// Undocumented enumeration case stands for `Object` type (sourced from an expection thrown).
-    static let CGPDFObjectTypeObject: CGPDFObjectType = CGPDFObjectType(rawValue: 77696)!
+    //static let CGPDFObjectTypeObject: CGPDFObjectType = CGPDFObjectType(rawValue: 77696)!
 
     /// Shorthand for type strings.
-    static let namesForTypes: [CGPDFObjectType:String] =
+    /*static let namesForTypes: [CGPDFObjectType:String] =
     [
         .null : "Null",
         .boolean : "Boolean",
@@ -34,7 +34,7 @@ class PDFParser
         .dictionary : "Dictionary",
         .stream : "Stream",
         CGPDFObjectTypeObject : "Object",
-    ]
+    ]*/
 
     struct Message
     {
@@ -63,8 +63,6 @@ class PDFParser
         // Document.
         guard
             let document = CGPDFDocument(pdfUrl as CFURL),
-            let catalog = document.catalog,
-            let info = document.info,
             let page = document.page(at: 1)
         else
         {
@@ -72,7 +70,19 @@ class PDFParser
             return [:]
         }
         
+        // Get PDF version
+        var major: Int32 = 0
+        var minor: Int32 = 0
+         document.getVersion(majorVersion: &major, minorVersion: &minor)
+        print("Version: \(major).\(minor)")
+        
         // get media box
+        var mediaBox: [CGFloat] = [0.0, 0.0, 0.0, 0.0]
+        //var str: String = page.getBoxRect(CGPDFBox.mediaBox)
+        mediaBox[0] =  page.getBoxRect(CGPDFBox.mediaBox).minX
+        mediaBox[1] =  page.getBoxRect(CGPDFBox.mediaBox).minY
+        mediaBox[2] =  page.getBoxRect(CGPDFBox.mediaBox).width
+        mediaBox[3] =  page.getBoxRect(CGPDFBox.mediaBox).height
         print(page.getBoxRect(CGPDFBox.mediaBox) )
         
         // get dictionary
@@ -80,104 +90,102 @@ class PDFParser
             print ("error getting dictionary")
             return[ "error": "error getting dictionary"]
         }
-        var resourcesRef: CGPDFDictionaryRef?
-        guard CGPDFDictionaryGetDictionary(dictionary, "Resources", &resourcesRef),
-        let resources = resourcesRef else {
-            print ("could not read resources")
-            return ["error": "could not read resources"]
-        }
-        var xObj: CGPDFDictionaryRef?
-        guard CGPDFDictionaryGetDictionary(resources, "XObject", &xObj), let xObject = xObj else {
-            print("Couldn't load page XObject.")
-            return ["error": "Couldn't load page XObject."]
-        }
-        /*var stream: CGPDFStreamRef?
-        guard CGPDFDictionaryGetStream(xObject, "Im0", &stream), let imageStream = stream else {
-            print("No image on PDF page.")
-            return ["error": "No image on PDF page."]
-        }
-        var format: CGPDFDataFormat = .raw
-        guard let data = CGPDFStreamCopyData(imageStream, &format) else {
-            print("Couldn't convert image stream to data.")
-            return ["error": "Couldn't convert image stream to data."]
-        }
-        let image = UIImage(data: data as Data)*/
         
         // GET VP array of dictionaries
         var vp: CGPDFArrayRef?
-        guard CGPDFDictionaryGetArray(dictionary,"VP",&vp), let vpArray = vp else {
-            return ["error":"No VP"]
-        }
-        var maxBBoxHt: Float = 0.0
-        var bboxValues = ""
-        var id = 0 // the vpArray that has the image with the largest height, ie the map
-        for index in 0 ..< CGPDFArrayGetCount(vpArray)
-        {
-            var eachDictRef: CGPDFDictionaryRef? = nil
-            if
-                CGPDFArrayGetDictionary(vpArray, index, &eachDictRef),
-                let eachDict = eachDictRef
+        if CGPDFDictionaryGetArray(dictionary,"VP",&vp), let vpArray = vp {
+            var maxBBoxHt: Float = 0.0
+            var bboxValues = ""
+            var gptsValues: [Float] = []   //String = ""
+            var measureDicts: [Int : CGPDFDictionaryRef] = [:]
+            var id = 0 // the vpArray that has the image with the largest height, ie the map
+            // Loop through each dictionary look for BBox<array> and Measure<Dict>GPTS<array>
+            for index in 0 ..< CGPDFArrayGetCount(vpArray)
             {
-            
-                // Get BBox Array
-                var bboxArrayRef: CGPDFArrayRef? = nil
-                if CGPDFDictionaryGetArray(eachDict, "BBox", &bboxArrayRef), let bboxArr = bboxArrayRef {
-                    // Get values from BBox Array x1 y1 x2 y2
-                    var bboxValue:[CGFloat] = []
-                    for i in 0 ..< CGPDFArrayGetCount(bboxArr)
-                    {
-                        //var bboxReal: CGPDFReal
-                        var bboxValueRef: CGPDFReal = 0.0
-                        CGPDFArrayGetNumber(bboxArr, i, &bboxValueRef)
-                        //let num: CGFloat = bboxValueRef
-                        bboxValue.append(bboxValueRef)
-                    }
-                    var ht:Float
-                    if bboxValue[1] > bboxValue[3] { ht = Float (bboxValue[1] - bboxValue[3]) }
-                    else { ht = Float (bboxValue[3] - bboxValue[1]) }
-                    if (ht > maxBBoxHt) {
-                        maxBBoxHt = ht
-                        id = index
-                        bboxValues.append(bboxValue[0].description)
-                        bboxValues.append(" ")
-                        bboxValues.append(bboxValue[1].description)
-                        bboxValues.append(" ")
-                        bboxValues.append(bboxValue[2].description)
-                        bboxValues.append(" ")
-                        bboxValues.append(bboxValue[3].description)
-                    }
-                }
+                var eachDictRef: CGPDFDictionaryRef? = nil
+                if
+                    CGPDFArrayGetDictionary(vpArray, index, &eachDictRef),
+                    let eachDict = eachDictRef
+                {
                 
-                // Get the lat long from GPTS
-                var measureDictRef: CGPDFDictionaryRef? = nil
-                if CGPDFDictionaryGetDictionary(eachDict, "Measure", &measureDictRef), let measureDict = measureDictRef {
+                    // Get BBox Array
+                    var bboxArrayRef: CGPDFArrayRef? = nil
+                    if CGPDFDictionaryGetArray(eachDict, "BBox", &bboxArrayRef), let bboxArr = bboxArrayRef {
+                        // Get values from BBox Array x1 y1 x2 y2
+                        var bboxValue:[CGFloat] = []
+                        for i in 0 ..< CGPDFArrayGetCount(bboxArr)
+                        {
+                            var bboxValueRef: CGPDFReal = 0.0
+                            CGPDFArrayGetNumber(bboxArr, i, &bboxValueRef)
+                            bboxValue.append(bboxValueRef)
+                        }
+                        var ht:Float
+                        if bboxValue[1] > bboxValue[3] { ht = Float (bboxValue[1] - bboxValue[3]) }
+                        else { ht = Float (bboxValue[3] - bboxValue[1]) }
+                        if (ht > maxBBoxHt) {
+                            maxBBoxHt = ht
+                            id = index
+                            bboxValues.append(bboxValue[0].description)
+                            bboxValues.append(" ")
+                            bboxValues.append(bboxValue[1].description)
+                            bboxValues.append(" ")
+                            bboxValues.append(bboxValue[2].description)
+                            bboxValues.append(" ")
+                            bboxValues.append(bboxValue[3].description)
+                        }
+                        print ("viewport = \(bboxValues)")
+                    }
                     
+                    // Save the Measure CGPDFDictionaryRefs in an array
+                    var measureDictRef: CGPDFDictionaryRef? = nil
+                    if CGPDFDictionaryGetDictionary(eachDict, "Measure", &measureDictRef), let measureDict = measureDictRef {
+                        measureDicts[id] = measureDict
+                        
+                    }
                 }
+                else {
+                    print("error reading dictionaries in VP dictionary")
+                }
+            }// loop to read each dictionary in VP
+            
+            // Read gpts lat/long values from the VP array that had the largest viewport bbox height stored in index id
+            // Get the lat long from GPTS from the Measure dictionary
+            var gptsArrayRef: CGPDFArrayRef? = nil
+            if CGPDFDictionaryGetArray(measureDicts[id]!, "GPTS", &gptsArrayRef), let gptsArr = gptsArrayRef {
+                // Get values from GPTS Array lat1 long1 lat2 long1 lat2 long2 lat1 long2
                 
+                for i in 0 ..< CGPDFArrayGetCount(gptsArr)
+                {
+                    var gptsValueRef: CGPDFReal = 0.0
+                    CGPDFArrayGetNumber(gptsArr, i, &gptsValueRef)
+                    gptsValues.append(Float (gptsValueRef)) //.description)
+                    //if (i < CGPDFArrayGetCount(gptsArr) - 1) {
+                    //    gptsValues.append(" ")
+                    //}
+                }
+                print ("bounds = \(gptsValues)")
             }
-            else {
-                print("error")
-            }
+            
+            // TODO:  return values here... add thumbnail filename
+            return ["bounds": gptsValues,
+                    "mediabox": mediaBox,
+                    "viewport": bboxValues,
+                    "thumbnail": nil]
             
             
         }
-        
-        
-        
-        
-        // Get PDF version
-        var major: Int32 = 0
-        var minor: Int32 = 0
-         document.getVersion(majorVersion: &major, minorVersion: &minor)
-        print("Version: \(major).\(minor)")
-        // Parse.
-        return [
-            "Catalog" : PDFParser.value(from: catalog),
-            "Info" : PDFParser.value(from: info)
-        ]
+        // no VP, This is the GeoPDF format
+        else {
+            
+            // TODO:  need to write code to read geoPDF format here...
+            
+            
+            // return values here...
+            return ["error":"TODO: need to write code to read geoPDF format here..."]
+        }
     }
 
-    static func value(from object: CGPDFObjectRef) -> Any?
+/*    static func value(from object: CGPDFObjectRef) -> Any?
     {
         switch (CGPDFObjectGetType(object))
         {
@@ -345,6 +353,6 @@ class PDFParser
             },
             dictionaryPointer
         )
-    }
+    }*/
 }
 
