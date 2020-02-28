@@ -13,29 +13,24 @@
 import UIKit
 import PDFKit
 
+var pdfView = PDFView()
+
 class ViewController: UIViewController {
 
     //let pdfView = PDFView()//
-    var pdfView: PDFView
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let pdfView = PDFView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height))
+        let pdfView = PDFView(frame: self.view.bounds)
+        //let pdfView = PDFView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height))
         
         // Do any additional setup after loading the view.
         if let pdfFileURL = Bundle.main.url(forResource: "Wellington",withExtension: "pdf"){
             print ("pdf file =  \(pdfFileURL)")
             // OPEN PDF
             
-            // IF THIS is true it gets errors!!!
-            /* [LayoutConstraints] Unable to simultaneously satisfy constraints.
-            Probably at least one of the constraints in the following list is one you don't want.
-            Try this:
-                (1) look at each constraint and try to figure out which you don't expect;
-                (2) find the code that added the unwanted constraint or constraints and fix it.
-            (Note: If you're seeing NSAutoresizingMaskLayoutConstraints that you don't understand, refer to the documentation for the UIView property translatesAutoresizingMaskIntoConstraints)
-            */
+            // Must set this to false!
             pdfView.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(pdfView)
             pdfView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor).isActive = true
@@ -44,7 +39,19 @@ class ViewController: UIViewController {
             pdfView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true
             
             if let document = PDFDocument(url: pdfFileURL){
+                pdfView.autoresizesSubviews = true
+                pdfView.autoresizingMask = [.flexibleWidth, .flexibleHeight, .flexibleTopMargin, .flexibleLeftMargin]
+                //pdfView.displayDirection = .vertical
+
+                pdfView.autoScales = true
+                pdfView.displayMode = .singlePageContinuous
+                //pdfView.displaysPageBreaks = true
                 pdfView.document = document
+
+                // how far can we zoom in?
+                pdfView.maxScaleFactor = 4.0
+                pdfView.minScaleFactor = pdfView.scaleFactor //pdfView.scaleFactorForSizeToFit
+                pdfView.scaleFactor = pdfView.scaleFactorForSizeToFit
                 
                 // show only one page of document. true is causing many errors?????
                 //pdfView.usePageViewController(true)
@@ -65,10 +72,10 @@ class ViewController: UIViewController {
                 }*/
                 
                 // Set up double tab zoom in --- Does NOTHING!!!!!
-                let doubleScreenTap = UITapGestureRecognizer(target: view, action: #selector(zoomIn(_:)))
+                let doubleScreenTap = UITapGestureRecognizer(target: pdfView, action: #selector(zoomIn(_:)))
                 doubleScreenTap.numberOfTapsRequired = 2
                 doubleScreenTap.numberOfTouchesRequired = 1
-                view.addGestureRecognizer(doubleScreenTap)
+                pdfView.addGestureRecognizer(doubleScreenTap)
                
                 // scrolling direction
                 //pdfView.displayDirection = .vertical
@@ -82,8 +89,12 @@ class ViewController: UIViewController {
             let pdf: [String:Any?] = PDFParser.parse(pdfUrl: pdfFileURL)
             print (pdf)
             print ("-- RETURNED VALUES --")
-            print (pdf["bounds"]!!)
-            print (pdf["viewport"]!!)
+            let bounds = pdf["bounds"]!!
+            print ("lat/long bounds: \(bounds)")
+            let viewport = pdf["viewport"]!!
+            print ("viewport margins: \(viewport)")
+            let mediabox = pdf["mediabox"]!!
+            print ("mediabox page size: \(mediabox)")
         }
         else {
             print ("error file not found")
@@ -91,10 +102,23 @@ class ViewController: UIViewController {
         }
     }
     
+    // On rotation make map fit, was zooming on landscape
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        pdfView.frame = view.frame
+        //pdfView.autoScales = true
+        if UIDevice.current.orientation.isLandscape {
+            print("landscape")
+        }
+        else {
+            print("portrait")
+        }
+    }
+    
+    // double tap zoom in
     @IBAction func zoomIn(_ gestureRecognizer: UITapGestureRecognizer)
-        // double tap zoom in
     {
-        print("double tap")
+        print("double tap zoom in")
          if gestureRecognizer.state == .ended
          {
             
@@ -104,10 +128,18 @@ class ViewController: UIViewController {
                    let destination = PDFDestination(page: currentPage, at: point)
                    destination.zoom = (pdfView.scaleFactor * 1.5)
                    pdfView.go(to: destination)
+                print("scaleFactor: /(pdfView.scaleFactor)")
             }
         }
     }
-
-
 }
 
+var counter:Int = 0
+// trying to hide menu that pops up on double click once in while. "Look Up Share... Copy Select Send To..."
+extension PDFView {
+    override public func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        print("\(counter) try to turn off PDF menu")
+        counter += 1
+        return false
+    }
+}

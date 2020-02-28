@@ -95,7 +95,8 @@ class PDFParser
         var vp: CGPDFArrayRef?
         if CGPDFDictionaryGetArray(dictionary,"VP",&vp), let vpArray = vp {
             var maxBBoxHt: Float = 0.0
-            var bboxValues = ""
+            //var bboxValues = ""
+            var bboxValues: [Float] = []
             var gptsValues: [Float] = []   //String = ""
             var measureDicts: [Int : CGPDFDictionaryRef] = [:]
             var id = 0 // the vpArray that has the image with the largest height, ie the map
@@ -125,13 +126,15 @@ class PDFParser
                         if (ht > maxBBoxHt) {
                             maxBBoxHt = ht
                             id = index
+                            bboxValues = [Float (bboxValue[0]), Float(bboxValue[1]), Float(bboxValue[2]), Float(bboxValue[3])]
+                            /* // return string x y x y
                             bboxValues.append(bboxValue[0].description)
                             bboxValues.append(" ")
                             bboxValues.append(bboxValue[1].description)
                             bboxValues.append(" ")
                             bboxValues.append(bboxValue[2].description)
                             bboxValues.append(" ")
-                            bboxValues.append(bboxValue[3].description)
+                            bboxValues.append(bboxValue[3].description)*/
                         }
                         print ("viewport = \(bboxValues)")
                     }
