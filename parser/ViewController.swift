@@ -12,11 +12,14 @@
 
 import UIKit
 import PDFKit
+import CoreLocation // current location
 
 var pdfView = PDFView()
 
-class ViewController: UIViewController {
 
+class ViewController: UIViewController {
+    var locationManager = CLLocationManager()
+    
     //let pdfView = PDFView()//
     
     
@@ -81,6 +84,14 @@ class ViewController: UIViewController {
                 //pdfView.displayDirection = .vertical
                 //pdfView.displayDirection = .horizontal
                 
+            
+                // Add annotation
+                let image = UIImage(named: "myImage")
+                let imageAnnotation = PushPin(image, bounds: CGRect(x: 200, y: 200, width: 200, height: 200), properties: nil)
+                let page = document.page(at: 1)
+                page?.addAnnotation(imageAnnotation)
+            
+            
             }
             
             //let jsonFileURL = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("output.json")
@@ -95,18 +106,37 @@ class ViewController: UIViewController {
             print ("viewport margins: \(viewport)")
             let mediabox = pdf["mediabox"]!!
             print ("mediabox page size: \(mediabox)")
+        
+        
         }
         else {
             print ("error file not found")
             return
         }
+        
+        //locationManager.delegate=self
+        locationManager.desiredAccuracy=kCLLocationAccuracyBest
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
+        
+        displayLocation();
     }
     
-    // On rotation make map fit, was zooming on landscape
+    
+    func displayLocation(){
+        var currentLoc: CLLocation!
+        if(CLLocationManager.authorizationStatus() == .authorizedWhenInUse ||
+        CLLocationManager.authorizationStatus() == .authorizedAlways) {
+           currentLoc = locationManager.location
+           print("Current location: \(currentLoc.coordinate.latitude), \(currentLoc.coordinate.longitude)")
+        }
+    }
+    
+    // On rotation make map fit, was zooming on landscape NOT WORKING??? Does nothing???
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         pdfView.frame = view.frame
-        //pdfView.autoScales = true
+        pdfView.autoScales = true
         if UIDevice.current.orientation.isLandscape {
             print("landscape")
         }
@@ -115,20 +145,20 @@ class ViewController: UIViewController {
         }
     }
     
-    // double tap zoom in
+    // double tap zoom in NOT WORKING NEVER CALLED!!!!!!
     @IBAction func zoomIn(_ gestureRecognizer: UITapGestureRecognizer)
     {
         print("double tap zoom in")
-         if gestureRecognizer.state == .ended
-         {
-            
-              if let currentPage = pdfView.currentPage
-              {
-                   let point = gestureRecognizer.location(in: pdfView)
-                   let destination = PDFDestination(page: currentPage, at: point)
-                   destination.zoom = (pdfView.scaleFactor * 1.5)
-                   pdfView.go(to: destination)
-                print("scaleFactor: /(pdfView.scaleFactor)")
+        if gestureRecognizer.state == .ended
+        {
+            print("double tap state end")
+            if let currentPage = pdfView.currentPage
+            {
+                let point = gestureRecognizer.location(in: pdfView)
+                let destination = PDFDestination(page: currentPage, at: point)
+                destination.zoom = (pdfView.scaleFactor * 1.5)
+                pdfView.go(to: destination)
+                print("scaleFactor: \(pdfView.scaleFactor)")
             }
         }
     }
