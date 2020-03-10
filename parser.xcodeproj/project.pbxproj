@@ -8,11 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		603637E423FB497800673713 /* Wellington.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 603637E323FB497700673713 /* Wellington.pdf */; };
-		605D5A7224172ACB00839667 /* ic_blue_pin-web.png in Resources */ = {isa = PBXBuildFile; fileRef = 605D5A7124172ACB00839667 /* ic_blue_pin-web.png */; };
-		605D5A7424172AF200839667 /* ic_cyan_pin-web.png in Resources */ = {isa = PBXBuildFile; fileRef = 605D5A7324172AF200839667 /* ic_cyan_pin-web.png */; };
-		605D5A7624172B0900839667 /* ic_launcher-web.png in Resources */ = {isa = PBXBuildFile; fileRef = 605D5A7524172B0900839667 /* ic_launcher-web.png */; };
-		605D5A7824172B3000839667 /* ic_red_pin-web.png in Resources */ = {isa = PBXBuildFile; fileRef = 605D5A7724172B3000839667 /* ic_red_pin-web.png */; };
-		605D5A7A24172B3F00839667 /* pdf_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 605D5A7924172B3F00839667 /* pdf_icon.png */; };
 		60617FDC23F609FE009D8042 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60617FDB23F609FE009D8042 /* AppDelegate.swift */; };
 		60617FDE23F609FE009D8042 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60617FDD23F609FE009D8042 /* SceneDelegate.swift */; };
 		60617FE023F609FE009D8042 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60617FDF23F609FE009D8042 /* ViewController.swift */; };
@@ -44,11 +39,6 @@
 
 /* Begin PBXFileReference section */
 		603637E323FB497700673713 /* Wellington.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = Wellington.pdf; sourceTree = "<group>"; };
-		605D5A7124172ACB00839667 /* ic_blue_pin-web.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_blue_pin-web.png"; sourceTree = "<group>"; };
-		605D5A7324172AF200839667 /* ic_cyan_pin-web.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_cyan_pin-web.png"; sourceTree = "<group>"; };
-		605D5A7524172B0900839667 /* ic_launcher-web.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_launcher-web.png"; sourceTree = "<group>"; };
-		605D5A7724172B3000839667 /* ic_red_pin-web.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_red_pin-web.png"; sourceTree = "<group>"; };
-		605D5A7924172B3F00839667 /* pdf_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pdf_icon.png; sourceTree = "<group>"; };
 		60617FD823F609FE009D8042 /* parser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = parser.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		60617FDB23F609FE009D8042 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		60617FDD23F609FE009D8042 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -115,11 +105,6 @@
 		60617FDA23F609FE009D8042 /* parser */ = {
 			isa = PBXGroup;
 			children = (
-				605D5A7924172B3F00839667 /* pdf_icon.png */,
-				605D5A7724172B3000839667 /* ic_red_pin-web.png */,
-				605D5A7524172B0900839667 /* ic_launcher-web.png */,
-				605D5A7324172AF200839667 /* ic_cyan_pin-web.png */,
-				605D5A7124172ACB00839667 /* ic_blue_pin-web.png */,
 				603637E323FB497700673713 /* Wellington.pdf */,
 				60617FDB23F609FE009D8042 /* AppDelegate.swift */,
 				60617FDD23F609FE009D8042 /* SceneDelegate.swift */,
@@ -257,13 +242,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				60617FE823F609FF009D8042 /* LaunchScreen.storyboard in Resources */,
-				605D5A7224172ACB00839667 /* ic_blue_pin-web.png in Resources */,
-				605D5A7624172B0900839667 /* ic_launcher-web.png in Resources */,
-				605D5A7424172AF200839667 /* ic_cyan_pin-web.png in Resources */,
-				605D5A7824172B3000839667 /* ic_red_pin-web.png in Resources */,
 				603637E423FB497800673713 /* Wellington.pdf in Resources */,
 				60617FE523F609FF009D8042 /* Assets.xcassets in Resources */,
-				605D5A7A24172B3F00839667 /* pdf_icon.png in Resources */,
 				60617FE323F609FE009D8042 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
