@@ -86,7 +86,7 @@ class ViewController: UIViewController {
                 
             
                 // Add annotation
-                let image = UIImage(named: "myImage")
+                let image = UIImage(named: "ic_red_pin-web.png")
                 let imageAnnotation = PushPin(image, bounds: CGRect(x: 200, y: 200, width: 200, height: 200), properties: nil)
                 let page = document.page(at: 1)
                 page?.addAnnotation(imageAnnotation)
